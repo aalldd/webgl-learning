@@ -33,10 +33,6 @@ const createShader = (gl, type, source) => {
 	gl.deleteShader(shader);
 };
 
-const createBuffer=(gl,targetArray,options)=>{
-
-}
-
 const createShaderFromScript = (gl, type, scriptId) => {
 	let sourceScript = $$('#' + scriptId);
 	if (!sourceScript) {
@@ -91,5 +87,5 @@ const getContext = (canvas) => {
 };
 
 export {
-	randomColor,$$,getContext,resizeCanvas,getCanvas,createProgram,createSimpleProgram,createShaderFromScript,createShader,createBuffer
+	randomColor,$$,getContext,resizeCanvas,getCanvas,createProgram,createSimpleProgram,createShaderFromScript,createShader
 }

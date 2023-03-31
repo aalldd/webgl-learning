@@ -20,6 +20,22 @@ const $$ = (str) => {
 	return result;
 };
 
+const loadTexture = (gl, src, attribute, callback) => {
+	let img = new Image();
+	img.crossOrigin = 'anonymous';
+	img.onload = function () {
+		gl.activeTexture(gl.TEXTURE0);
+		let texture = gl.createTexture();
+		gl.bindTexture(gl.TEXTURE_2D, texture);
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+		gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+		gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+		gl.uniform1i(attribute, 0);
+		callback && callback();
+	};
+	img.src = src;
+};
+
 const createShader = (gl, type, source) => {
 	let shader = gl.createShader(type);
 	gl.shaderSource(shader, source);
@@ -31,6 +47,48 @@ const createShader = (gl, type, source) => {
 	}
 	console.error(gl.getShaderInfoLog(shader));
 	gl.deleteShader(shader);
+};
+
+const standardOpts = {
+	size: 2,
+	normalize: false,
+	stride: 0,
+	offset: 0
+};
+
+// 创建缓冲区 针对非索引缓冲区
+const createBuffer = (gl, targetEles, options) => {
+	const buffer = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+	if (targetEles.length === 1 && options.length === 1) {
+		let targetEle = targetEles[0];
+		let option = options[0];
+		//获取顶点着色器中的变量a_Position的位置。
+		let target = gl.getAttribLocation(gl.program, targetEle);
+		const resOpts = Object.assign(standardOpts, option);
+		resOpts.type = option.type || gl.FLOAT;
+		gl.vertexAttribPointer(target, resOpts.size, resOpts.type, resOpts.normalize, resOpts.stride, resOpts.offset);
+		gl.enableVertexAttribArray(target);
+		return buffer;
+	} else {
+		// 如果传递了多个targetEles,说明一个缓冲区里需要存储多种数据,这样，我们要求参数targetEles的长度和options一致，一个ele对应一个option
+		if (targetEles.length === options.length) {
+			targetEles.forEach((targetEle, index) => {
+				let option = options[index];
+				//获取顶点着色器中的变量a_Position的位置。
+				let target = gl.getAttribLocation(gl.program, targetEle);
+				const resOpts = Object.assign(standardOpts, option);
+				resOpts.type = option.type || gl.FLOAT;
+				gl.vertexAttribPointer(target, resOpts.size, resOpts.type, resOpts.normalize, resOpts.stride, resOpts.offset);
+				gl.enableVertexAttribArray(target);
+			});
+			return buffer;
+		} else {
+			console.error('缓冲区设置错误，缓冲区数据类型与设置与一一对应！');
+			return;
+		}
+	}
+
 };
 
 const createShaderFromScript = (gl, type, scriptId) => {
@@ -87,5 +145,5 @@ const getContext = (canvas) => {
 };
 
 export {
-	randomColor,$$,getContext,resizeCanvas,getCanvas,createProgram,createSimpleProgram,createShaderFromScript,createShader
-}
+	loadTexture, randomColor, $$, getContext, resizeCanvas, getCanvas, createProgram, createSimpleProgram, createShaderFromScript, createShader, createBuffer, standardOpts
+};
